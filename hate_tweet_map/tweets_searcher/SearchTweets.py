@@ -1,16 +1,14 @@
 import concurrent
-import os
 from concurrent import futures
 import logging
 import math
 import time
 from concurrent.futures import Future, as_completed
 from datetime import datetime, timezone
-from typing import Optional
-
 import requests
 import yaml
 from tqdm import tqdm
+import re
 
 from hate_tweet_map import util
 from hate_tweet_map.database import DataBase
@@ -243,6 +241,7 @@ class SearchTweets:
     def twitter_filter_retweet(self):
         return self.__twitter_filter_retweet
 
+
     def __connect_to_endpoint(self, retried: bool = False) -> dict:
         """
         This method sends the request to twitter and return the response.
@@ -436,7 +435,22 @@ class SearchTweets:
         self.log.debug("SAVING TWEETS")
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
+            list_tweet = []
             for tweet in self.response.get('data', []):
+                list_tweet.append(tweet['text'])
+                for t in list_tweet:
+                    clean_tweet = re.sub("@[A-Za-z0-9_]+", "", t)
+                    clean_tweet = re.sub("#[A-Za-z0-9_]+", "", clean_tweet)
+                    clean_link = re.sub(r"http\S+", "", clean_tweet)
+                    regrex_pattern = re.compile(pattern="["
+                                                        u"\U0001F600-\U0001F64F"  # emoticons
+                                                        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                                                        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                                                        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                                                        "]+", flags=re.UNICODE)
+                    result = regrex_pattern.sub(r'', clean_link)
+                    tweet['text'] = result.lower()
+                    print((tweet['text']))
                 if not self.mongodb.is_in(tweet['id']):
                     self.log.debug(tweet)
                     # process each tweet ib parallel
@@ -456,3 +470,4 @@ class SearchTweets:
     def __save_callback(self, fut: Future):
         # append the tweet process on a list
         self._all.append(fut.result())
+
