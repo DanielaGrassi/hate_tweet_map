@@ -449,7 +449,8 @@ class SearchTweets:
                                                         u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
                                                         "]+", flags=re.UNICODE)
                     result = regrex_pattern.sub(r'', clean_link)
-                    tweet['text'] = result
+                    tweet['text'] = result.lower()
+                    print((tweet['text']))
                 if not self.mongodb.is_in(tweet['id']):
                     self.log.debug(tweet)
                     # process each tweet ib parallel
