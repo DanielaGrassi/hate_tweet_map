@@ -39,5 +39,5 @@ def runtimePos(path):
             phrase_pos.append((split[1], split[2], split[3], phrase_dict))
 
         pos_tagging.append(phrase_pos)
-    print(pos_tagging)
+
     return sentences, pos_tagging
