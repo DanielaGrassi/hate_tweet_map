@@ -93,9 +93,6 @@ def maleAppos_femaleName(tweet, male_crafts):
                     print("Utilizzare un'apposizione  maschile con un nome femminile diminuisce l'inclusività")
     return inclusive
 
-
-
-
 def noun_donna(tweet, male_crafts):
     inclusive= 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -169,16 +166,37 @@ def male_expressions(sentence):
             inclusive = - 0.25
     return inclusive
 
-
+def male_female_jobs(tweet, male_list, female_list):
+    inclusive= 0.0
+    for idx, (token, tag, det, morph) in enumerate(tweet):
+        doc = nlp(token)
+        for w in doc:
+            if tag == 'NOUN' and w.lemma_ in male_list:
+                if 'Number' in morph and morph['Number'] == 'Plur':
+                    pos = male_list.index(w.lemma_)
+                    for words in tweet:
+                        token_words, tag_words, det_words, morph_words = words
+                        doc_token = nlp(token_words)
+                        for d in doc_token:
+                            if tag_words =='NOUN' and d.lemma_ in female_list:
+                                pos1=female_list.index(d.lemma_)
+                                if pos == pos1:
+                                    if 'Number' in morph_words and morph_words['Number'] == 'Plur':
+                                        inclusive = 0.25
+                                        print("Utilizzare sia il femminile che il maschile per esprimere i lavori aumenta l'inclusività")
+    return inclusive
 
 if __name__ == "__main__":
     path = '../../data.json'
     nlp = spacy.load("it_core_news_lg")
-
     crafts_path = '../../script/inclusivity_management/docs/list.tsv'
+
     ## inclusivity for the whole dataset
     crafts = read_tsv(crafts_path)
+    male_list=list(crafts['itemLabel'])
+    female_list=list(crafts['femaleLabel'])
     male_crafts = set(crafts['itemLabel'].unique())
+    female_crafts = set(crafts['femaleLabel'].unique())
     sentences, ph = rp.runtimePos(path)
     for sentence, phrase in zip(sentences, ph):
         inclusive = 0.0
@@ -191,6 +209,7 @@ if __name__ == "__main__":
         inclusive += article_inclusive(phrase)
         inclusive += male_collettives(phrase, male_crafts)
         inclusive += male_expressions(sentence)
+        inclusive += male_female_jobs(phrase, male_list, female_list)
         print(sentence)
 
         print(inclusive)
