@@ -163,15 +163,30 @@ def schwa(tweet, explain):
         if token.endswith('*') or token.endswith('ə'):
             inclusive = 0.25
             if explain:
-              print("Utilizzare caratteri come la schwa o l'asterisco alla fine di una parola aumenta l'inclusività ")
+              print("Utilizzare caratteri come la schwa o l'asterisco alla fine di una parola aumenta l'inclusività")
     return inclusive
 
-def male_collettives(tweet, male_crafts, explain):
+def male_collettives_cases(tweet, male_crafts, explain):
     inclusive = 0.0
     # Se ho che il nome che ho nella frase è un mestiere maschile
     for idx, (token, tag, det, morph) in enumerate(tweet):
         doc = nlp(token)
         for w in doc:
+            if tag == 'NOUN' and w.lemma_ in male_list:
+                if 'Number' in morph and morph['Number'] == 'Plur':
+                    pos = male_list.index(w.lemma_)
+                    for words in tweet:
+                        token_words, tag_words, det_words, morph_words = words
+                        doc_token = nlp(token_words)
+                        for d in doc_token:
+                            if tag_words == 'NOUN' and d.lemma_ in female_list:
+                                pos1 = female_list.index(d.lemma_)
+                                if pos == pos1:
+                                    if 'Number' in morph_words and morph_words['Number'] == 'Plur':
+                                        inclusive = +0.50
+                                        if explain:
+                                            print("Utilizzare un nome collettivo maschile con il corrispettivo femminile aumenta l'inclusività!")
+                                            return inclusive
             if tag == 'NOUN' and w.lemma_ in male_crafts:
                 if 'Number' in morph and morph['Number'] == 'Plur':
                     counter_propn=0
@@ -183,9 +198,11 @@ def male_collettives(tweet, male_crafts, explain):
                     if counter_propn > 1:
                         inclusive=inclusive
                     else:
-                        inclusive= -0.25
+                        inclusive += -0.25
                         if explain:
-                            print("Utilizzare un nome collettivo maschile diminuisce l'inclusività!")
+                            print("Utilizzare un nome collettivo maschile senza nomi propri maschili diminuisce l'inclusività!")
+
+
     return inclusive
 
 def male_expressions(sentence, explain):
@@ -193,33 +210,33 @@ def male_expressions(sentence, explain):
         myExpressions = set(line.strip() for line in f)
     inclusive = 0.0
     for expression in myExpressions:
-        #TODO Aggiungere controllo su "desiderio di paternità"
-        if str(expression).lower() in str(sentence).lower():
-            inclusive = - 0.25
-            if explain:
-                print("stringa che fa l'explain di questa regola")
+        if "desiderio di paternità" not in sentence:
+            if str(expression).lower() in str(sentence).lower():
+                inclusive = - 0.25
+                if explain:
+                    print("Utilizzare espressioni comuni riferite solo agli uomini diminuisce l'inclusività")
     return inclusive
 
-def male_female_jobs(tweet, male_list, female_list, explain):
-    inclusive= 0.0
-    for idx, (token, tag, det, morph) in enumerate(tweet):
-        doc = nlp(token)
-        for w in doc:
-            if tag == 'NOUN' and w.lemma_ in male_list:
-                if 'Number' in morph and morph['Number'] == 'Plur':
-                    pos = male_list.index(w.lemma_)
-                    for words in tweet:
-                        token_words, tag_words, det_words, morph_words = words
-                        doc_token = nlp(token_words)
-                        for d in doc_token:
-                            if tag_words =='NOUN' and d.lemma_ in female_list:
-                                pos1=female_list.index(d.lemma_)
-                                if pos == pos1:
-                                    if 'Number' in morph_words and morph_words['Number'] == 'Plur':
-                                        inclusive = 0.50
-                                        if explain:
-                                            print("Utilizzare sia il femminile che il maschile per esprimere i lavori aumenta l'inclusività")
-    return inclusive
+# def male_female_jobs(tweet, male_list, female_list, explain):
+#     inclusive= 0.0
+#     for idx, (token, tag, det, morph) in enumerate(tweet):
+#         doc = nlp(token)
+#         for w in doc:
+#             if tag == 'NOUN' and w.lemma_ in male_list:
+#                 if 'Number' in morph and morph['Number'] == 'Plur':
+#                     pos = male_list.index(w.lemma_)
+#                     for words in tweet:
+#                         token_words, tag_words, det_words, morph_words = words
+#                         doc_token = nlp(token_words)
+#                         for d in doc_token:
+#                             if tag_words =='NOUN' and d.lemma_ in female_list:
+#                                 pos1=female_list.index(d.lemma_)
+#                                 if pos == pos1:
+#                                     if 'Number' in morph_words and morph_words['Number'] == 'Plur':
+#                                         inclusive = 0.50
+#                                         if explain:
+#                                             print("Utilizzare sia il femminile che il maschile per esprimere i lavori aumenta l'inclusività")
+#     return inclusive
 
 if __name__ == "__main__":
 
@@ -237,23 +254,22 @@ if __name__ == "__main__":
     sentences, ph = rp.runtimePos(path)
 
     df = pd.DataFrame({'Tweet': sentences})
-    df['Tweet'].to_csv('../../tweets.csv', encoding='utf-8-sig', index = False)
+    #df['Tweet'].to_csv('../../tweets.csv', encoding='utf-8-sig', index = False)
 
     for sentence, phrase in zip(sentences, ph):
         inclusive = 0.0
         explain = True
-        inclusive += schwa(phrase, explain)
-        inclusive += article_noun(phrase, explain)
-        inclusive += pronoun_inclusive(phrase, explain)
-        inclusive += femaleName_maleAppos(phrase, male_crafts, explain)
-        inclusive += art_donna_noun(phrase, male_crafts, explain)
-        inclusive += noun_donna(phrase, male_crafts, explain)
-        inclusive += femaleSub_malePart(phrase, explain)
-        inclusive += maleAppos_femaleName(phrase, male_crafts, explain)
-        inclusive += article_inclusive(phrase, explain)
-        inclusive += male_collettives(phrase, male_crafts, explain)
-        inclusive += male_expressions(sentence, explain)
-        inclusive += male_female_jobs(phrase, male_list, female_list, explain)
+        # inclusive += schwa(phrase, explain)
+        # inclusive += article_noun(phrase, explain)
+        # inclusive += pronoun_inclusive(phrase, explain)
+        # inclusive += femaleName_maleAppos(phrase, male_crafts, explain)
+        # inclusive += art_donna_noun(phrase, male_crafts, explain)
+        # inclusive += noun_donna(phrase, male_crafts, explain)
+        # inclusive += femaleSub_malePart(phrase, explain)
+        # inclusive += maleAppos_femaleName(phrase, male_crafts, explain)
+        # inclusive += article_inclusive(phrase, explain)
+        inclusive += male_collettives_cases(phrase, male_crafts, explain)
+        # inclusive += male_expressions(sentence, explain)
         print(sentence)
 
         print(inclusive)
