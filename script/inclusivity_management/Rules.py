@@ -144,9 +144,7 @@ def pronoun_inclusive(tweet, explain):
 def article_inclusive(tweet, explain):
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        #print(token, tag, det, morph)
         if tag == 'PRON' or tag == 'NOUN':
-            #print(tag, det, morph, token)
             if 'Gender' in morph:
                if morph['Gender'] == 'Masc':
                    if (idx+2 < len(tweet)):
@@ -168,13 +166,15 @@ def schwa(tweet, explain):
 
 def male_collettives_cases(tweet, male_crafts, explain):
     inclusive = 0.0
+    both_detected=False
     # Se ho che il nome che ho nella frase è un mestiere maschile
     for idx, (token, tag, det, morph) in enumerate(tweet):
         doc = nlp(token)
         for w in doc:
-            if tag == 'NOUN' and w.lemma_ in male_list:
+            if tag == 'NOUN' and w.lemma_ in male_crafts:
                 if 'Number' in morph and morph['Number'] == 'Plur':
                     pos = male_list.index(w.lemma_)
+                    counter_propn = 0
                     for words in tweet:
                         token_words, tag_words, det_words, morph_words = words
                         doc_token = nlp(token_words)
@@ -183,25 +183,20 @@ def male_collettives_cases(tweet, male_crafts, explain):
                                 pos1 = female_list.index(d.lemma_)
                                 if pos == pos1:
                                     if 'Number' in morph_words and morph_words['Number'] == 'Plur':
+                                        both_detected = True # Flag per capire se sono stati trovati sia lavoro femminile che maschile
                                         inclusive = +0.50
                                         if explain:
                                             print("Utilizzare un nome collettivo maschile con il corrispettivo femminile aumenta l'inclusività!")
-                                            return inclusive
-            if tag == 'NOUN' and w.lemma_ in male_crafts:
-                if 'Number' in morph and morph['Number'] == 'Plur':
-                    counter_propn=0
-                    for words in tweet:
-                        token_words, tag_words, det_words, morph_words= words
-                        if tag_words == "PROPN":
-                            if check_male_name(token_words): # Controllare se è un nome proprio maschile (da una lista)
-                                counter_propn = counter_propn+1
+                            if tag_words == "PROPN":
+                                if check_male_name(token_words): # Controllare se è un nome proprio maschile (da una lista)
+                                    counter_propn = counter_propn+1
                     if counter_propn > 1:
-                        inclusive=inclusive
+                        inclusive = inclusive
                     else:
-                        inclusive += -0.25
-                        if explain:
-                            print("Utilizzare un nome collettivo maschile senza nomi propri maschili diminuisce l'inclusività!")
-
+                        if both_detected == False: # Se non sono stati trovati sia lavoro femminile che maschile
+                            inclusive += -0.25
+                            if explain:
+                                print("Utilizzare un nome collettivo maschile senza il corrispettivo femminile o senza nomi propri maschili associati diminuisce l'inclusività!")
 
     return inclusive
 
