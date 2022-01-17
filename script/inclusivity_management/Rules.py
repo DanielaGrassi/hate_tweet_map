@@ -1,6 +1,12 @@
 import spacy
 import RuntimePos as rp
 import pandas as pd
+import yaml
+from script.search_tweets import search_tweets
+from script.process_tweets import process_tweet
+from script.manage_tweets import manage_tweets
+
+mylist = []
 
 
 def read_tsv(tsv):
@@ -151,7 +157,7 @@ def pronoun_inclusive(tweet, explain):
 def article_inclusive(tweet, explain):
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        print(token, tag, det, morph)
+        #print(token, tag, det, morph)
         if tag == 'DET' and det == 'det':
             if 'Gender' in morph:
                 if morph['Gender'] == 'Masc':
@@ -169,10 +175,10 @@ def article_inclusive(tweet, explain):
 def words_ends_with2gender(tweet, explain):
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        print(token, tag, det, morph)
+        #print(token, tag, det, morph)
         if token == '/' or token == '\\':
             if idx + 1 < len(tweet):
-                if tweet[idx +1][0] == 'a' or tweet[idx +1][0] == 'e':
+                if tweet[idx + 1][0] == 'a' or tweet[idx + 1][0] == 'e':
                     inclusive = 0.10
                     if explain:
                         print("Utilizzare parole declinate in più forme aumenta l'inclusività")
@@ -211,9 +217,11 @@ def male_collettives_cases(tweet, male_crafts, explain):
                                         both_detected = True  # Flag per capire se sono stati trovati sia lavoro femminile che maschile
                                         inclusive = +0.50
                                         if explain:
-                                            print("Utilizzare un nome collettivo maschile con il corrispettivo femminile aumenta l'inclusività!")
+                                            print(
+                                                "Utilizzare un nome collettivo maschile con il corrispettivo femminile aumenta l'inclusività!")
                             if tag_words == "PROPN":
-                                if check_male_name(token_words):  # Controllare se è un nome proprio maschile (da una lista)
+                                if check_male_name(
+                                        token_words):  # Controllare se è un nome proprio maschile (da una lista)
                                     counter_propn = counter_propn + 1
                     if counter_propn > 1:
                         inclusive = inclusive
@@ -221,7 +229,8 @@ def male_collettives_cases(tweet, male_crafts, explain):
                         if both_detected == False:  # Se non sono stati trovati sia lavoro femminile che maschile
                             inclusive += -0.25
                             if explain:
-                                print("Utilizzare un nome collettivo maschile senza il corrispettivo femminile o senza nomi propri maschili associati diminuisce l'inclusività!")
+                                print(
+                                    "Utilizzare un nome collettivo maschile senza il corrispettivo femminile o senza nomi propri maschili associati diminuisce l'inclusività!")
 
     return inclusive
 
@@ -257,41 +266,91 @@ def male_expressions(sentence, explain):
 #                                     if 'Number' in morph_words and morph_words['Number'] == 'Plur':
 #                                         inclusive = 0.50
 #                                         if explain:
-#                                             print("Utilizzare sia il femminile che il maschile per esprimere i lavori aumenta l'inclusività")
+#                                             print("Utilizzare sia il femminile che il maschile per esprimere
+#                                             i lavori aumenta l'inclusività")
 #     return inclusive
+
+
+def main():
+    # df = pd.DataFrame({'Tweet': sentences})
+    # df['Tweet'].to_csv('../../tweets.csv', encoding='utf-8-sig', index = False)
+
+    path = '../../data.json'
+    sentences, ph = rp.runtimePos(path)
+    for sentence, phrase in zip(sentences, ph):
+        inclusive = 0.0
+        explain = True
+        inclusive += words_ends_with2gender(phrase, explain)
+        inclusive += schwa(phrase, explain)
+        inclusive += article_noun(phrase, explain)
+        inclusive += pronoun_inclusive(phrase, explain)
+        inclusive += femaleName_maleAppos(phrase, male_crafts, explain)
+        inclusive += art_donna_noun(phrase, male_crafts, explain)
+        inclusive += noun_donna(phrase, male_crafts, explain)
+        inclusive += femaleSub_malePart(phrase, explain)
+        inclusive += maleAppos_femaleName(phrase, male_crafts, explain)
+        inclusive += article_inclusive(phrase, explain)
+        inclusive += male_collettives_cases(phrase, male_crafts, explain)
+        inclusive += male_expressions(sentence, explain)
+        print(sentence)
+
+        print(inclusive)
+
+
+
+def menu_list():
+    operation = input(
+        '''From which source do you want tweets to be taken?:\n [1] List of tweet \n [2] Twitter User-ID \n''')
+
+    if operation == '1':
+        print("Type the path to the list of tweet you would like to examine: ")
+        number = str(input())
+        mylist.append(number)
+
+    elif operation == '2':
+        print("Type the Twitter User-ID whose tweets you would like to analyze : ")
+        number = str(input())
+        mylist.append(number)
+
+    else:
+        print('You have not chosen a valid operator, please run the program again.')
+
+    #again()
+
+
+def again():
+    list_again = input('''Would you like to see main menu again? (Y/N)''')
+
+    if list_again.upper() == 'Y':
+        menu_list()
+    elif list_again.upper() == 'N':
+        print('OK. Bye bye. :)')
+    else:
+        again()
+
 
 if __name__ == "__main__":
 
-    path = '../../data.json'
     nlp = spacy.load("it_core_news_lg")
-    crafts_path = '../../script/inclusivity_management/docs/list.tsv'
-
     ## inclusivity for the whole dataset
+    crafts_path = '../../script/inclusivity_management/docs/list.tsv'
     crafts = read_tsv(crafts_path)
     male_list = list(crafts['itemLabel'])
     female_list = list(crafts['femaleLabel'])
     male_crafts = set(crafts['itemLabel'].unique())
     female_crafts = set(crafts['femaleLabel'].unique())
-    sentences, ph = rp.runtimePos(path)
 
-    df = pd.DataFrame({'Tweet': sentences})
-    # df['Tweet'].to_csv('../../tweets.csv', encoding='utf-8-sig', index = False)
+    menu_list()
 
-    for sentence, phrase in zip(sentences, ph):
-        inclusive = 0.0
-        explain = True
-        # inclusive += words_ends_with2gender(phrase, explain)
-        # inclusive += schwa(phrase, explain)
-        # inclusive += article_noun(phrase, explain)
-        # inclusive += pronoun_inclusive(phrase, explain)
-        # inclusive += femaleName_maleAppos(phrase, male_crafts, explain)
-        # inclusive += art_donna_noun(phrase, male_crafts, explain)
-        # inclusive += noun_donna(phrase, male_crafts, explain)
-        # inclusive += femaleSub_malePart(phrase, explain)
-        # inclusive += maleAppos_femaleName(phrase, male_crafts, explain)
-        # inclusive += article_inclusive(phrase, explain)
-        # inclusive += male_collettives_cases(phrase, male_crafts, explain)
-        # inclusive += male_expressions(sentence, explain)
-        print(sentence)
+    with open("../../script/search_tweets/search_tweets.config", "r") as params_file:
+        params = yaml.safe_load(params_file)
+    params['twitter']['search']['user'] = mylist[0]
 
-        print(inclusive)
+    with open("../../script/search_tweets/search_tweets.config", "w") as params_file:
+        yaml.dump(params, params_file, default_flow_style=False)
+
+    search_tweets.main()
+    process_tweet.main()
+    manage_tweets.main()
+
+    main()

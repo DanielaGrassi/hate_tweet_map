@@ -32,7 +32,7 @@ def main():
     start = time.time()
     logging.basicConfig()
 
-    with open("manage_tweets.config", "r") as ymlfile:
+    with open("../../script/manage_tweets/manage_tweets.config", "r") as ymlfile:
         # load the configuration from the config file
         cfg = yaml.safe_load(ymlfile)
         mode = cfg['mode']
@@ -76,7 +76,7 @@ def main():
     log.setLevel(logging.INFO)
 
     # connect to the databse
-    db = DataBase('manage_tweets.config')
+    db = DataBase('../../script/manage_tweets/manage_tweets.config')
     values = []
     # set the logical operator that must be used to connect the fields
     if logical_operator == "and":
