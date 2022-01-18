@@ -38,6 +38,30 @@ def check_surname(token):
         return False
 
 
+def male_female_jobs(tweet, male_list, female_list):
+    #Controlla che ci siano sia il mestiere maschile plurale che quello femminile
+    male_female_detected = False
+    male_female_words_detected=[]
+    for idx, (token, tag, det, morph) in enumerate(tweet):
+        doc = nlp(token)
+        for w in doc:
+            if tag == 'NOUN' and w.lemma_ in male_list:
+                if 'Number' in morph and morph['Number'] == 'Plur':
+                    pos = male_list.index(w.lemma_)
+                    for words in tweet:
+                        token_words, tag_words, det_words, morph_words = words
+                        doc_token = nlp(token_words)
+                        for d in doc_token:
+                            if tag_words =='NOUN' and d.lemma_ in female_list:
+                                pos1 = female_list.index(d.lemma_)
+                                if pos == pos1:
+                                    if 'Number' in morph_words and morph_words['Number'] == 'Plur':
+                                        male_female_detected = True
+                                        male_female_words_detected.append(token)
+                                        male_female_words_detected.append(token_words)
+
+    return male_female_detected,male_female_words_detected
+
 def article_noun(tweet, explain):
     # Articolo femminile + nome proprio (spesso si riferisce solo alle donne)-> La Boschi
     inclusive = 0.0
@@ -171,7 +195,6 @@ def article_inclusive(tweet, explain):
 def words_ends_with2gender(tweet, explain):
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        #print(token, tag, det, morph)
         if token == '/' or token == '\\':
             if idx + 1 < len(tweet):
                 if tweet[idx + 1][0] == 'a' or tweet[idx + 1][0] == 'e':
@@ -190,46 +213,49 @@ def schwa(tweet, explain):
                 print("Utilizzare caratteri come la schwa o l'asterisco alla fine di una parola aumenta l'inclusività")
     return inclusive
 
-#todo: separare sto schifo di regola intricata
-def male_collettives_cases(tweet, male_crafts, explain):
+def male_collettives(tweet, male_list, explain):
     inclusive = 0.0
-    both_detected = False
+    pl_male_job=[]
+    minus_points=False
     # Se ho che il nome che ho nella frase è un mestiere maschile
+    male_female_detected, male_female_words_detected = male_female_jobs(tweet, male_list, female_list)
+    if male_female_detected == True:
+        inclusive += 0.25
+        if explain:
+            ("Utilizzare sia mestiere maschile plurale che il corrispettivo femminile aumenta l'inclusività!")
     for idx, (token, tag, det, morph) in enumerate(tweet):
         doc = nlp(token)
-        for w in doc:
-            if tag == 'NOUN' and w.lemma_ in male_crafts:
-                if 'Number' in morph and morph['Number'] == 'Plur':
-                    pos = male_list.index(w.lemma_)
-                    counter_propn = 0
-                    for words in tweet:
-                        token_words, tag_words, det_words, morph_words = words
-                        doc_token = nlp(token_words)
-                        for d in doc_token:
-                            if tag_words == 'NOUN' and d.lemma_ in female_list:
-                                pos1 = female_list.index(d.lemma_)
-                                if pos == pos1:
-                                    if 'Number' in morph_words and morph_words['Number'] == 'Plur':
-                                        both_detected = True  # Flag per capire se sono stati trovati sia lavoro femminile che maschile
-                                        inclusive = +0.25
-                                        if explain:
-                                            print(
-                                                "Utilizzare un nome collettivo maschile con il corrispettivo femminile aumenta l'inclusività!")
-                            if tag_words == "PROPN":
-                                if check_male_name(
-                                        token_words):  # Controllare se è un nome proprio maschile (da una lista)
-                                    counter_propn = counter_propn + 1
-                    if counter_propn > 1:
-                        inclusive = inclusive
-                    else:
-                        if both_detected == False:  # Se non sono stati trovati sia lavoro femminile che maschile
-                            inclusive += -0.25
-                            if explain:
-                                print(
-                                    "Utilizzare un nome collettivo maschile senza il corrispettivo femminile o senza nomi propri maschili associati diminuisce l'inclusività!")
+        counter_propn = 0
+        w = [tok for tok in doc]
+        if tag == 'NOUN' and w[0].lemma_ in male_list:
+            if 'Number' in morph and morph['Number'] == 'Plur':
+                pl_male_job.append(token)
+                for word in tweet:
+                    token_word, tag_word, det_word, morph_word = word
+                    if tag_word == "PROPN":
+                        if check_male_name(token_word): #Controllare se è un nome proprio maschile (da una lista)
+                            counter_propn = counter_propn+1
+        if counter_propn > 1:
+            inclusive = inclusive
 
+
+    # per i mestieri plurali identificati nel tweet e nelle parole che invece soddisfano la funzione male_female_jobs
+    # controlla che i mestieri plurali identificati non siano proprio le parole che hanno triggerato male_female_jobs
+    # Se c'è almeno un maschile plurale che non ha triggerato la regola (dunque che ci sia solo il maschile plurale)
+    # Sottrai 0.25
+    print(pl_male_job, male_female_words_detected)
+    for job in pl_male_job:
+        # questo controllo fallisce non so perchè, infatti risulta sempre True questo booleano, quindi fallisce il controllo successivo
+        if job not in male_female_words_detected:
+            print("il booleano minus_points è stato settato a true")
+            minus_points = True
+
+#todo: il controllo ora va bene però ci sono dei problemi per quanto riguarda gli array pl_male_job e male_female_words che non si svuotano.
+    if minus_points==True:
+        inclusive += -0.25
+        if explain:
+            print("Utilizzare un nome collettivo maschile diminuisce l'inclusività!")
     return inclusive
-
 
 def male_expressions(sentence, explain):
     with open('docs/uomini_di.txt', 'r', encoding='utf-8') as f:
@@ -242,6 +268,8 @@ def male_expressions(sentence, explain):
                 if explain:
                     print("Utilizzare espressioni comuni riferite solo agli uomini diminuisce l'inclusività")
     return inclusive
+
+
 
 
 if __name__ == "__main__":
@@ -264,18 +292,19 @@ if __name__ == "__main__":
     for sentence, phrase in zip(sentences, ph):
         inclusive = 0.0
         explain = True
-        inclusive += words_ends_with2gender(phrase, explain)
-        inclusive += schwa(phrase, explain)
-        inclusive += article_noun(phrase, explain)
-        inclusive += pronoun_inclusive(phrase, explain)
-        inclusive += femaleName_maleAppos(phrase, male_crafts, explain)
-        inclusive += art_donna_noun(phrase, male_crafts, explain)
-        inclusive += noun_donna(phrase, male_crafts, explain)
-        inclusive += femaleSub_malePart(phrase, explain)
-        inclusive += maleAppos_femaleName(phrase, male_crafts, explain)
-        inclusive += article_inclusive(phrase, explain)
-        inclusive += male_collettives_cases(phrase, male_crafts, explain)
-        inclusive += male_expressions(sentence, explain)
+        # inclusive += words_ends_with2gender(phrase, explain)
+        # inclusive += schwa(phrase, explain)
+        # inclusive += article_noun(phrase, explain)
+        # inclusive += pronoun_inclusive(phrase, explain)
+        # inclusive += femaleName_maleAppos(phrase, male_crafts, explain)
+        # inclusive += art_donna_noun(phrase, male_crafts, explain)
+        # inclusive += noun_donna(phrase, male_crafts, explain)
+        # inclusive += femaleSub_malePart(phrase, explain)
+        # inclusive += maleAppos_femaleName(phrase, male_crafts, explain)
+        # inclusive += article_inclusive(phrase, explain)
+        inclusive += male_collettives(phrase, male_list, explain)
+        #inclusive += male_female_jobs(phrase, male_list, female_list, explain)
+        #inclusive += male_expressions(sentence, explain)
 
     #     d.append(
     #         {
