@@ -39,7 +39,7 @@ def check_surname(token):
 
 
 def article_noun(tweet, explain):
-    # Articolo femminile + nome proprio (spesso si riferisce solo alle donne)
+    # Articolo femminile + nome proprio (spesso si riferisce solo alle donne)-> La Boschi
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
         if tag == "PROPN":
@@ -47,7 +47,7 @@ def article_noun(tweet, explain):
                 if tweet[idx - 1][1] == 'DET':
                     if 'Gender' in tweet[idx - 1][3] and 'PronType' in tweet[idx - 1][3]:
                         if tweet[idx - 1][3]['Gender'] == 'Fem' and tweet[idx - 1][3]['PronType'] == 'Art':
-                            inclusive = -0.5
+                            inclusive = -0.25
                             if explain:
                                 print(
                                     "Utilizzare un articolo davanti ad un nome femminile diminuisce di molto l'inclusività!")
@@ -93,11 +93,12 @@ def maleAppos_femaleName(tweet, male_crafts, explain):
                 if tweet[idx + 1][1] == 'PROPN' and check_female_name(tweet[idx + 1][0]):
                     inclusive = - 0.25
                     if explain:
-                        print("Utilizzare un'apposizione  maschile con un nome femminile diminuisce l'inclusività")
+                        print("Utilizzare un'apposizione maschile con un nome femminile diminuisce l'inclusività")
     return inclusive
 
 
 def noun_donna(tweet, male_crafts, explain):
+    #L'assessore donna
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
         if idx + 1 < len(tweet):
@@ -112,6 +113,7 @@ def noun_donna(tweet, male_crafts, explain):
 
 
 def femaleSub_malePart(tweet, explain):
+    # Daniela è andato
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
         if tag == 'PROPN' or tag == 'NOUN' and det == 'nsubj':
@@ -132,6 +134,7 @@ def femaleSub_malePart(tweet, explain):
 
 
 def pronoun_inclusive(tweet, explain):
+    # lui/lei
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
         if tag == 'PRON' or tag == 'NOUN':
@@ -149,6 +152,7 @@ def pronoun_inclusive(tweet, explain):
 
 
 def article_inclusive(tweet, explain):
+    # il/la - un/una
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
         #print(token, tag, det, morph)
@@ -209,7 +213,7 @@ def male_collettives_cases(tweet, male_crafts, explain):
                                 if pos == pos1:
                                     if 'Number' in morph_words and morph_words['Number'] == 'Plur':
                                         both_detected = True  # Flag per capire se sono stati trovati sia lavoro femminile che maschile
-                                        inclusive = +0.50
+                                        inclusive = +0.25
                                         if explain:
                                             print(
                                                 "Utilizzare un nome collettivo maschile con il corrispettivo femminile aumenta l'inclusività!")
@@ -241,27 +245,6 @@ def male_expressions(sentence, explain):
                     print("Utilizzare espressioni comuni riferite solo agli uomini diminuisce l'inclusività")
     return inclusive
 
-
-# def male_female_jobs(tweet, male_list, female_list, explain):
-#     inclusive= 0.0
-#     for idx, (token, tag, det, morph) in enumerate(tweet):
-#         doc = nlp(token)
-#         for w in doc:
-#             if tag == 'NOUN' and w.lemma_ in male_list:
-#                 if 'Number' in morph and morph['Number'] == 'Plur':
-#                     pos = male_list.index(w.lemma_)
-#                     for words in tweet:
-#                         token_words, tag_words, det_words, morph_words = words
-#                         doc_token = nlp(token_words)
-#                         for d in doc_token:
-#                             if tag_words =='NOUN' and d.lemma_ in female_list:
-#                                 pos1=female_list.index(d.lemma_)
-#                                 if pos == pos1:
-#                                     if 'Number' in morph_words and morph_words['Number'] == 'Plur':
-#                                         inclusive = 0.50
-#                                         if explain:
-#                                             print("Utilizzare sia il femminile che il maschile per esprimere i lavori aumenta l'inclusività")
-#     return inclusive
 
 if __name__ == "__main__":
     d = []
