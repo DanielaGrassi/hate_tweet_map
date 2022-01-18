@@ -101,14 +101,12 @@ def noun_donna(tweet, male_crafts, explain):
     #L'assessore donna
     inclusive = 0.0
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        if idx + 1 < len(tweet):
-            if tweet[idx + 1][0] in male_crafts:
-                if token == 'donna' and idx != 0:
-                    if tweet[idx + 1][1] == 'NOUN' and tweet[idx + 1][2] == 'compound':
-                        inclusive = - 0.25
-                        if explain:
-                            print(
-                                "Utilizzare un'apposizione maschile con il sostantivo 'donna' diminuisce l'inclusività")
+        if token in male_crafts:
+            if idx + 1 < len(tweet):
+                if tweet[idx + 1][0] == 'donna':
+                    inclusive = - 0.25
+                    if explain:
+                        print("Utilizzare un'apposizione maschile seguito da 'donna' diminuisce l'inclusività")
     return inclusive
 
 
@@ -192,7 +190,7 @@ def schwa(tweet, explain):
                 print("Utilizzare caratteri come la schwa o l'asterisco alla fine di una parola aumenta l'inclusività")
     return inclusive
 
-
+#todo: separare sto schifo di regola intricata
 def male_collettives_cases(tweet, male_crafts, explain):
     inclusive = 0.0
     both_detected = False
@@ -285,7 +283,7 @@ if __name__ == "__main__":
     #             'inclusive_rate': inclusive
     #         }
     #     )
-    #     print(sentence)
-    #     print(inclusive)
+        print(sentence)
+        print(inclusive)
     #
     # pd.DataFrame(d).to_csv('../../tweets.csv', sep='\t', encoding='utf-8-sig', index=False)
