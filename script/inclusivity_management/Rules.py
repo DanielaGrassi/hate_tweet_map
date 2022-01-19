@@ -220,6 +220,7 @@ def male_collettives(tweet, male_list, explain):
     # Se ho che il nome che ho nella frase è un mestiere maschile
     male_female_detected, male_female_words_detected = male_female_jobs(tweet, male_list, female_list)
     if male_female_detected == True:
+        print("adding 0.25")
         inclusive += 0.25
         if explain:
             ("Utilizzare sia mestiere maschile plurale che il corrispettivo femminile aumenta l'inclusività!")
@@ -227,8 +228,13 @@ def male_collettives(tweet, male_list, explain):
         doc = nlp(token)
         counter_propn = 0
         w = [tok for tok in doc]
+        # ####
+        # if token == 'autoferrotranvieri' or token =='internavigatori':
+        #     print(tag, det, morph,w[0].lemma_)
+        # ####
         if tag == 'NOUN' and w[0].lemma_ in male_list:
             if 'Number' in morph and morph['Number'] == 'Plur':
+
                 pl_male_job.append(token)
                 for word in tweet:
                     token_word, tag_word, det_word, morph_word = word
@@ -237,25 +243,24 @@ def male_collettives(tweet, male_list, explain):
                             counter_propn = counter_propn+1
         if counter_propn > 1:
             inclusive = inclusive
-
-
-    # per i mestieri plurali identificati nel tweet e nelle parole che invece soddisfano la funzione male_female_jobs
-    # controlla che i mestieri plurali identificati non siano proprio le parole che hanno triggerato male_female_jobs
-    # Se c'è almeno un maschile plurale che non ha triggerato la regola (dunque che ci sia solo il maschile plurale)
-    # Sottrai 0.25
+        else:
+            minus_points=True
+            #per i mestieri plurali identificati nel tweet e nelle parole che invece soddisfano la funzione male_female_jobs
+            #controlla che i mestieri plurali identificati non siano proprio le parole che hanno triggerato male_female_jobs
+            #Se c'è almeno un maschile plurale che non ha triggerato la regola (dunque che ci sia solo il maschile plurale)
+            #Sottrai 0.25
     print(pl_male_job, male_female_words_detected)
     for job in pl_male_job:
-        # questo controllo fallisce non so perchè, infatti risulta sempre True questo booleano, quindi fallisce il controllo successivo
-        if job not in male_female_words_detected:
+        if job not in male_female_words_detected and minus_points == True:
             print("il booleano minus_points è stato settato a true")
-            minus_points = True
-
-#todo: il controllo ora va bene però ci sono dei problemi per quanto riguarda gli array pl_male_job e male_female_words che non si svuotano.
-    if minus_points==True:
-        inclusive += -0.25
-        if explain:
-            print("Utilizzare un nome collettivo maschile diminuisce l'inclusività!")
+            inclusive += -0.25
+            if explain:
+                print("Utilizzare un nome collettivo maschile diminuisce l'inclusività!")
     return inclusive
+
+
+
+
 
 def male_expressions(sentence, explain):
     with open('docs/uomini_di.txt', 'r', encoding='utf-8') as f:
