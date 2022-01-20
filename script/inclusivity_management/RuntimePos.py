@@ -9,12 +9,12 @@ path = '../../data.json'
 def runtimePos(path):
     with open(path) as f:
         dataset = json.load(f)
-    pos=[]
+    pos = []
     sentences = []
     for tweet in dataset:
         df = tweet['spacy']
         raw_text = tweet['raw_text']
-        sentences.append((raw_text))
+        sentences.append(raw_text)
         pos.append(df)
 
     #mette il pos tagging in una lista, senza le entità
