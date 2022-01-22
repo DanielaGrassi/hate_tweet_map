@@ -5,7 +5,7 @@ from hate_tweet_map.tweets_processor.TweetProcessor import ProcessTweet
 
 def main():
     logging.info("CONFIGURING...")
-    p = ProcessTweet("process_tweets.config")
+    p = ProcessTweet("../../script/process_tweets/process_tweets.config")
     p.start()
 
 
