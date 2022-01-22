@@ -38,6 +38,30 @@ def male_female_jobs(tweet, male_list, female_list):
     return male_female_detected, male_female_words_detected
 
 
+def male_female_jobs(tweet, male_list, female_list):
+    #Controlla che ci siano sia il mestiere maschile plurale che quello femminile
+    male_female_detected = False
+    male_female_words_detected=[]
+    for idx, (token, tag, det, morph) in enumerate(tweet):
+        doc = nlp(token)
+        for w in doc:
+            if tag == 'NOUN' and w.lemma_ in male_list:
+                if 'Number' in morph and morph['Number'] == 'Plur':
+                    pos = male_list.index(w.lemma_)
+                    for words in tweet:
+                        token_words, tag_words, det_words, morph_words = words
+                        doc_token = nlp(token_words)
+                        for d in doc_token:
+                            if tag_words =='NOUN' and d.lemma_ in female_list:
+                                pos1 = female_list.index(d.lemma_)
+                                if pos == pos1:
+                                    if 'Number' in morph_words and morph_words['Number'] == 'Plur':
+                                        male_female_detected = True
+                                        male_female_words_detected.append(token)
+                                        male_female_words_detected.append(token_words)
+
+    return male_female_detected,male_female_words_detected
+
 def article_noun(tweet, explain):
     # Articolo femminile + nome proprio (spesso si riferisce solo alle donne)-> La Boschi
     inclusive = 0.0
@@ -102,12 +126,13 @@ def maleAppos_femaleName(tweet, male_crafts, explain):
                 if tweet[idx + 1][1] == 'PROPN' and utils.check_female_name(tweet[idx + 1][0]):
                     inclusive = - 0.25
                     if explain:
+
                         explanation = "Utilizzare un'apposizione maschile con un nome femminile diminuisce l'inclusività"
     return inclusive, explanation
 
 
 def noun_donna(tweet, male_crafts, explain):
-    # L'assessore donna
+    # L'assesore donna
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -116,8 +141,11 @@ def noun_donna(tweet, male_crafts, explain):
                 if tweet[idx + 1][0] == 'donna':
                     inclusive = - 0.25
                     if explain:
+
                         explanation = "Utilizzare un'apposizione maschile seguito da 'donna' diminuisce l'inclusività"
     return inclusive, explanation
+
+
 
 
 def femaleSub_malePart(tweet, explain):
@@ -165,7 +193,7 @@ def article_inclusive(tweet, explain):
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        print(token, tag, det, morph)
+        #print(token, tag, det, morph)
         if tag == 'DET' and det == 'det':
             if 'Gender' in morph:
                 if morph['Gender'] == 'Masc':
@@ -206,17 +234,21 @@ def schwa(tweet, explain):
 
 def male_collettives(tweet, male_list, explain):
 
+
     inclusive = 0.0
     pl_male_job = []
     minus_points = False
     explanation = None
+
     # Se ho che il nome che ho nella frase è un mestiere maschile
     male_female_detected, male_female_words_detected = male_female_jobs(tweet, male_list, female_list)
     if male_female_detected == True:
         print("adding 0.25")
         inclusive += 0.25
         if explain:
+
             explanation = "Utilizzare sia mestiere maschile plurale che il corrispettivo femminile aumenta l'inclusività!"
+
     for idx, (token, tag, det, morph) in enumerate(tweet):
         doc = nlp(token)
         counter_propn = 0
@@ -232,6 +264,7 @@ def male_collettives(tweet, male_list, explain):
                 for word in tweet:
                     token_word, tag_word, det_word, morph_word = word
                     if tag_word == "PROPN":
+
                         if utils.check_male_name(
                                 token_word):  # Controllare se è un nome proprio maschile (da una lista)
                             counter_propn = counter_propn + 1
@@ -254,6 +287,9 @@ def male_collettives(tweet, male_list, explain):
     return inclusive, explanation
 
 
+
+
+
 def male_expressions(sentence, explain):
     with open('docs/uomini_di.txt', 'r', encoding='utf-8') as f:
         myExpressions = set(line.strip() for line in f)
@@ -264,6 +300,7 @@ def male_expressions(sentence, explain):
             if str(expression).lower() in str(sentence).lower():
                 inclusive = - 0.25
                 if explain:
+
                     explanation = "Utilizzare espressioni comuni riferite solo agli uomini diminuisce l'inclusività"
 
     return inclusive, explanation
@@ -346,9 +383,9 @@ def main(sentences, ph, explain):
         scores.append(score)
         explanations.append(explanation)
 
-        score, explanation = male_female_jobs(phrase, male_list, female_list, explain)
-        scores.append(score)
-        explanations.append(explanation)
+        # score, explanation = male_female_jobs(phrase, male_list, female_list, explain)
+        # scores.append(score)
+        # explanations.append(explanation)
 
         score, explanation = male_expressions(sentence, explain)
         scores.append(score)
@@ -357,16 +394,20 @@ def main(sentences, ph, explain):
 
         inclusive = sum(scores)
         explanations = [x for x in explanations if x is not None]
+
         print(scores, explanations)
+        sentence = sentence.replace(",", "")
+        sentence = sentence.replace("\"", "")
+        print(sentence)
         d.append(
             {
-                'Tweet': sentence.replace("\t", ""),
+                'Tweet': sentence.replace("\t", " "),
                 'inclusive_rate': inclusive,
                 'explanation': explanations
             }
         )
 
-    pd.DataFrame(d).to_csv('../../tweets.csv', sep='\t', encoding='utf-8-sig', index=False)
+    #pd.DataFrame(d).to_csv('../../results.csv', sep=',', encoding='utf-8-sig', index=False)
 
 
 if __name__ == "__main__":
@@ -412,4 +453,5 @@ if __name__ == "__main__":
         tweets = pd.read_csv(path_csv)
         sentences, ph = save_postag(tweets)
         d = []
+
         main(sentences, ph, explain)

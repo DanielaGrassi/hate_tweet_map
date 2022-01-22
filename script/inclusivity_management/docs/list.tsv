@@ -3,6 +3,7 @@ fotografo	fotografa
 attore	attrice
 scienziato	scienziata
 astronomo	astronoma
+consigliere	consigliera
 re	regina
 lavoratore	lavoratrice
 diplomatico	diplomatica
@@ -141,7 +142,6 @@ matematico	matematica
 stampatore	stampatrice
 mercenario	mercenaria
 bibliotecario	bibliotecaria
-lottatore di arti marziali miste	lottatrice di arti marziali miste
 doppiatore	doppiatrice
 incisore	incisora
 tassonomo	tassonoma
@@ -353,7 +353,6 @@ endocrinologo	endocrinologa
 prefattore	prefattrice
 cardiochirurgo	cardiochirurga
 dirigente	dirigente
-consigliere comunale	consigliera comunale
 enciclopedista	enciclopedista
 briologo	briologa
 pteridologo	pteridologa
@@ -471,6 +470,8 @@ autore di testi	autrice di testi
 direttore di coro	direttrice di coro
 direttore musicale	direttrice musicale
 epatologo	epatologa
+autoferrotranviere	autoferrotranviera
+internavigatore	internavigatrice
 andrologo	androloga
 bibliologo	bibliologa
 allenatore	allenatrice
@@ -556,7 +557,6 @@ procuratore	procuratrice
 cancelliere	cancelliera
 truccatore	truccatora
 scenotecnico	scenotecnica
-avvocato	avvocata
 avvocato	avvocatessa
 notaio	notaia
 assessore	assessora
