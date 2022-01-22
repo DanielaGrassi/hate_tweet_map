@@ -5,6 +5,9 @@ uomini di stato
 uomini di mondo
 uomini di mare
 uomini di dio
+uomini di chiesa
+uomini di parola
+uomini di parole
 uomini di fede
 uomini di classe
 uomini di buona volontà
@@ -12,6 +15,9 @@ uomini di italia
 uomini d'italia
 uomini di guerra
 uomini primitivi
+uomini di scienza
+uomini di coraggio
+uomini nuovi
 a misura d'uomo
 a passo d'uomo
 diritti dell'uomo
