@@ -12,9 +12,67 @@ from script.process_tweets import process_tweet
 from script.manage_tweets import manage_tweets
 from hate_tweet_map.tweets_processor.TweetProcessor import ProcessTweet
 
+"""
+Rules.py:
+
+This module contains Pattern matching and Lexicon-based rules for the detection of non-inclusiveness in Italian language.
+Most of the rules use both approaches to reach the objective, for example, when checking the PROPN tag of spaCy, 
+also lexicons of proper nouns are used. 
+
+- male_female_jobs():       This rule checks that both male and female plural jobs are used in the same phrase. 
+                            If the pattern matches, a score of 0.25 is added to the whole inclusiveness.
+
+- article_noun():           This rule checks that a surname is not used with an article. 
+                            If the pattern article + surname is respected, a score of 0.25 is taken off.
+                            ex. La Boschi
+
+- femaleName_maleAppos():   This rule checks if a female proper noun is followed by a male apposition. 
+                            If this happens, a score of 0.25 is taken off from the whole inclusivity.
+                            ex. Alessia è un avvocato formidabile
+
+- art_donna_noun():         This rule checks if the noun "donna" is followed by a male noun. 
+                            In this case, the score is decreased of 0.25.  
+
+- maleAppos_femaleName():   This rule checks if a male apposition is followed by a female proper noun. 
+                            If this happens, a score of 0.25 is taken off from the whole inclusivity.  
+                            ex. L'assessore Daniela        
+
+- noun_donna():             This rule checks if a male apposition is followed by the noun "donna". 
+                            If this happens, a score of 0.25 is taken off from the whole inclusivity.  
+                            ex. L'assesore donna
+
+- femaleSub_malePart():     This rule checks if a female proper noun is used with a male participle tens. 
+                            If this happens, a score of 0.25 is taken from the inclusivity score.  
+                            ex. Daniela è andato
+
+- pronoun_inclusive():      This rule checks if the gender pronouns are used together in the same phrase. 
+                            If this happens, the inclusivity score is increased of 0.25.
+                            ex. lui/lei
+
+- article_inclusive():      This rule checks if the gender articles are used together in the same phrase. 
+                            If this happens, the inclusivity score is increased of 0.25.
+                            ex. il/la - un/una
+
+- word_ends_with2gender():  This rule checks if a word is declinated in more forms, using two genders. 
+                            If this happens, the inclusiveness score is increased of 0.10.
+                            ex. andati/e
+
+
+- schwa():                  This rule checks if in a phrase there are words that end with the schwa or with an asterisk. 
+                            If this happens, for each item found, the score is increased of 0.10.
+                            ex. vostr* amic*
+
+- male_collettives():       This rule checks if a male plural job is used alone in the phrase. 
+                            If this happens, the overall inclusivity score is decreased of 0.25 points.
+
+
+- male_expressions():       This rule checks if a common expression only referred to male gender is used, taking as a reference a corpus built by us. 
+                            If this happens, a score of 0.25 is taken from the inclusiveness score.
+                            ex. uomini di fede-> non inclusivo
+"""
+
 
 def male_female_jobs(tweet, male_list, female_list):
-    #Controlla che ci siano sia il mestiere maschile plurale che quello femminile
     male_female_detected = False
     male_female_words_detected=[]
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -39,7 +97,6 @@ def male_female_jobs(tweet, male_list, female_list):
 
 
 def article_noun(tweet, explain):
-    # Articolo femminile + nome proprio (spesso si riferisce solo alle donne)-> La Boschi
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -56,7 +113,6 @@ def article_noun(tweet, explain):
 
 
 def femaleName_maleAppos(tweet, male_crafts, explain):
-    # Alessia è un avvocato formidabile
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -75,25 +131,18 @@ def art_donna_noun(tweet, crafts, explain):
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        print(idx, (token, tag, det, morph))
         if token == 'donna' and idx != 0:
-            print(token)
             if idx + 1 < len(tweet):
                 if tweet[idx + 1][1] == 'NOUN' and tweet[idx + 1][2] == 'compound':
-                    print(tweet[idx + 1][1])
-                    print(tweet[idx + 1][0])
-                    print(crafts)
                     if tweet[idx + 1][0] in crafts:
 
                         inclusive = - 0.25
-                        print(inclusive)
                         if explain:
                             explanation = "Utilizzare il sostantivo 'donna' con un' apposizione maschile' diminuisce l'inclusività"
     return inclusive, explanation
 
 
 def maleAppos_femaleName(tweet, male_crafts, explain):
-    # L'assessore Alessia
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -107,7 +156,6 @@ def maleAppos_femaleName(tweet, male_crafts, explain):
 
 
 def noun_donna(tweet, male_crafts, explain):
-    # L'assesore donna
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -121,7 +169,6 @@ def noun_donna(tweet, male_crafts, explain):
 
 
 def femaleSub_malePart(tweet, explain):
-    # Daniela è andato
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -142,7 +189,6 @@ def femaleSub_malePart(tweet, explain):
 
 
 def pronoun_inclusive(tweet, explain):
-    # lui/lei
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
@@ -161,11 +207,9 @@ def pronoun_inclusive(tweet, explain):
 
 
 def article_inclusive(tweet, explain):
-    # il/la - un/una
     inclusive = 0.0
     explanation = None
     for idx, (token, tag, det, morph) in enumerate(tweet):
-        # print(token, tag, det, morph)
         if tag == 'DET' and det == 'det':
             if 'Gender' in morph:
                 if morph['Gender'] == 'Masc':
@@ -205,13 +249,11 @@ def schwa(tweet, explain):
 
 
 def male_collettives(tweet, male_list, explain):
-
     inclusive = 0.0
     pl_male_job = []
     counter_propn = 0
     explanation = None
 
-    # Se ho che il nome che ho nella frase è un mestiere maschile
     male_female_detected, male_female_words_detected = male_female_jobs(tweet, male_list, female_list)
     if male_female_detected == True:
         inclusive += 0.25
@@ -222,10 +264,6 @@ def male_collettives(tweet, male_list, explain):
         doc = nlp(token)
 
         w = [tok for tok in doc]
-        # ####
-        # if token == 'autoferrotranvieri' or token =='internavigatori':
-        #     print(tag, det, morph,w[0].lemma_)
-        # ####
         if tag == 'NOUN' and w[0].lemma_ in male_list:
             if 'Number' in morph and morph['Number'] == 'Plur':
 
@@ -235,19 +273,12 @@ def male_collettives(tweet, male_list, explain):
                     if tag_word == "PROPN":
 
                         if utils.check_male_name(
-                                token_word):  # Controllare se è un nome proprio maschile (da una lista)
+                                token_word):
                             counter_propn = counter_propn + 1
 
-           # per i mestieri plurali identificati nel tweet e nelle parole che invece soddisfano la funzione male_female_jobs
-            # controlla che i mestieri plurali identificati non siano proprio le parole che hanno triggerato male_female_jobs
-            # Se c'è almeno un maschile plurale che non ha triggerato la regola (dunque che ci sia solo il maschile plurale)
-            # Sottrai 0.25
-    print(pl_male_job, male_female_words_detected)
     for job in pl_male_job:
         if job not in male_female_words_detected:
-            print("il booleano minus_points è stato settato a true")
             if counter_propn > 1:
-                print("counter" + str(counter_propn))
                 inclusive = 0.0
             else:
                 inclusive += -0.25
@@ -299,7 +330,6 @@ def main(sentences, ph, explain):
     for sentence, phrase in zip(sentences, ph):
         scores = []
         explanations = []
-        # print(phrase)
 
         score, explanation = words_ends_with2gender(phrase, explain)
         scores.append(score)
@@ -356,10 +386,10 @@ def main(sentences, ph, explain):
         inclusive = sum(scores)
         explanations = [x for x in explanations if x is not None]
 
-        print(scores, explanations)
+
         sentence = sentence.replace(",", "")
         sentence = sentence.replace("\"", "")
-        print(sentence)
+
         d.append(
             {
                 'Tweet': sentence.replace("\t", " "),
