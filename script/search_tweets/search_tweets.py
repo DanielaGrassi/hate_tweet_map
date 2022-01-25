@@ -15,9 +15,9 @@ def main():
     start = time.time()
     log.info(datetime.fromtimestamp(start))
 
-    mongo_db = DataBase("../../script/search_tweets/search_tweets.config")
+    #mongo_db = DataBase("../../script/search_tweets/search_tweets.config")
     log.info("LOADING CONFIGURATION")
-    twitter_search = SearchTweets(mongodb=mongo_db, path_to_cnfg_file='../../script/search_tweets/search_tweets.config')
+    twitter_search = SearchTweets(path_to_cnfg_file='../../script/search_tweets/search_tweets.config')
 
     log.info("SEARCH FOR TWEETS")
     n_tweets = twitter_search.search()

@@ -3,6 +3,7 @@ from concurrent import futures
 import logging
 import math
 import time
+import pandas as pd
 from concurrent.futures import Future, as_completed
 from datetime import datetime, timezone
 import requests
@@ -18,7 +19,8 @@ class SearchTweets:
     """
 
     """
-    def __init__(self, mongodb: DataBase, path_to_cnfg_file: str) -> None:
+
+    def __init__(self, path_to_cnfg_file: str) -> None:
         """
         This method load the paramaters of the serch from the configuration file, validate these and initialize the value of the class attribute.
 
@@ -27,7 +29,7 @@ class SearchTweets:
         :param mongodb: the database instance where save the result of the search
         :type mongodb: DataBase
         """
-        self.mongodb = mongodb
+
         self._all = []
         self.total_result = 0
         self.__multi_user = False
@@ -241,7 +243,6 @@ class SearchTweets:
     def twitter_filter_retweet(self):
         return self.__twitter_filter_retweet
 
-
     def __connect_to_endpoint(self, retried: bool = False) -> dict:
         """
         This method sends the request to twitter and return the response.
@@ -324,7 +325,7 @@ class SearchTweets:
         while "meta" in self.response:
             self.log.debug("RECEIVED: {} TWEETS".format(self.response['meta']['result_count']))
             # save the tweets received
-            #save_bar = tqdm(desc="Saving", leave=False, position=1)
+            # save_bar = tqdm(desc="Saving", leave=False, position=1)
             self.__save()
             # update the value of the total result obtained
             self.total_result += self.response['meta']['result_count']
@@ -383,7 +384,7 @@ class SearchTweets:
         one_user = False
         bar = None
 
-        if  len(self.__twitter_users) > 0:
+        if len(self.__twitter_users) > 0:
             no_user = False
             if len(self.__twitter_users) == 1:
                 one_user = True
@@ -392,9 +393,11 @@ class SearchTweets:
 
         if multi_user:
             self.log.debug("MULTI-USERS SEARCH")
-            bar1 = tqdm(total=len(self.__twitter_users), leave=False, position=0, desc="INFO:MULTI-USERS SEARCH:SEARCHING")
+            bar1 = tqdm(total=len(self.__twitter_users), leave=False, position=0,
+                        desc="INFO:MULTI-USERS SEARCH:SEARCHING")
         elif one_user:
-            bar1 = tqdm(total=len(self.__twitter_users), leave=False, position=0, desc="INFO:SEARCH:SEARCHING FOR {}".format(self.__twitter_users[0]))
+            bar1 = tqdm(total=len(self.__twitter_users), leave=False, position=0,
+                        desc="INFO:SEARCH:SEARCHING FOR {}".format(self.__twitter_users[0]))
         for us in self.__twitter_users:
             if multi_user:
                 bar1.set_description("INFO:MULTI-USERS SEARCH:SEARCHING FOR: {}".format(us))
@@ -414,13 +417,13 @@ class SearchTweets:
             else:
                 bar = tqdm(desc="INFO:SEARCH:SEARCHING", leave=False, position=0)
             self.__make(bar)
-        #time.sleep(0.1)
-        #if bar is not None:
+        # time.sleep(0.1)
+        # if bar is not None:
         #    bar.close()
         print('\n')
-        self.log.info('CREATING NECESSARY INDEXES ON DB')
-        self.log.debug(self.mongodb.create_indexes())
-
+        # self.log.info('CREATING NECESSARY INDEXES ON DB')
+        # self.log.debug(self.mongodb.create_indexes())
+        #
 
         return self.total_result
 
@@ -436,6 +439,7 @@ class SearchTweets:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
             list_tweet = []
+            results = []
             for tweet in self.response.get('data', []):
                 list_tweet.append(tweet['text'])
                 for t in list_tweet:
@@ -450,24 +454,29 @@ class SearchTweets:
                                                         "]+", flags=re.UNICODE)
                     result = regrex_pattern.sub(r'', clean_link)
                     tweet['text'] = result.lower()
-                    print((tweet['text']))
-                if not self.mongodb.is_in(tweet['id']):
-                    self.log.debug(tweet)
-                    # process each tweet ib parallel
-                    fut = executor.submit(util.pre_process_tweets_response, tweet, self.response['includes'])
-                    fut.add_done_callback(self.__save_callback)
-                    futures.append(fut)
-                else:
-                    # if the tweet is already in the db not save it and update the value of the number of tweets saved.
-                    self.total_result -= 1
+
+                fut = executor.submit(util.pre_process_tweets_response, tweet, self.response['includes'])
+                fut.add_done_callback(self.__save_callback)
+                futures.append(fut)
+                results.append(tweet['text'])
+                pd.DataFrame(results).to_csv('../../input.csv', sep=',', encoding='utf-8-sig', index=True, header=['Tweet'])
+                # if not self.mongodb.is_in(tweet['id']):
+                #     self.log.debug(tweet)
+                #     # process each tweet ib parallel
+                #     fut = executor.submit(util.pre_process_tweets_response, tweet, self.response['includes'])
+                #     fut.add_done_callback(self.__save_callback)
+                #     futures.append(fut)
+                # else:
+                #     # if the tweet is already in the db not save it and update the value of the number of tweets saved.
+                #     self.total_result -= 1
+
         for job in tqdm(as_completed(futures), total=len(futures), desc="INFO:SEARCH:SAVING", leave=False, position=1):
             pass
 
-        self.mongodb.save_many(self._all)
-        # clean the list populate with these tweets processed.
-        self._all = []
+        # self.mongodb.save_many(self._all)
+        # # clean the list populate with these tweets processed.
+        # self._all = []
 
     def __save_callback(self, fut: Future):
         # append the tweet process on a list
         self._all.append(fut.result())
-
