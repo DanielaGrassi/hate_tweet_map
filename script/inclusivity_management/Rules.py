@@ -419,9 +419,13 @@ if __name__ == "__main__":
             yaml.dump(params, params_file, default_flow_style=False)
 
         search_tweets.main()
-        tweets = pd.read_csv('../../input.csv')
+        tweets = pd.read_csv('../../tweets.csv')
         sentences, ph = save_postag(tweets)
         main(sentences, ph, explain)
+
+        inclusivity_score, user_label = utils.calculate_user_score('../../results.csv')
+        print("User '"+ str(userid) + "' is classified as: "+ str(user_label) + " with a score of: "+ str(inclusivity_score))
+
 
     if path_csv is not None:
         tweets = pd.read_csv(path_csv)

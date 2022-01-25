@@ -70,4 +70,4 @@ def calculate_user_score(results_csv):
 
 
 if __name__ == "__main__":
-   print(calculate_user_score('../../results.csv'))
+   calculate_user_score('../../results.csv')
