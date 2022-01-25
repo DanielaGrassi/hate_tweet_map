@@ -45,7 +45,7 @@ also lexicons of proper nouns are used.
 
 - femaleSub_malePart():     This rule checks if a female proper noun is used with a male participle tens. 
                             If this happens, a score of 0.25 is taken from the inclusivity score.  
-                            ex. "Daniela è andato alla spiaggia"
+                            ex. "Simona è andato alla spiaggia"
 
 - pronoun_inclusive():      This rule checks if the gender pronouns are used together in the same phrase. 
                             If this happens, the inclusivity score is increased of 0.25.
