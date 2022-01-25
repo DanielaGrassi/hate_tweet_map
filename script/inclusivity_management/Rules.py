@@ -62,15 +62,16 @@ also lexicons of proper nouns are used.
 
 - schwa():                  This rule checks if in a phrase there are words that end with the schwa or with an asterisk. 
                             If this happens, for each item found, the score is increased of 0.10.
-                            ex. vostr* amic*
+                            ex. "Taylor è vostr* amic*?"
 
 - male_collettives():       This rule checks if a male plural job is used alone in the phrase. 
                             If this happens, the overall inclusivity score is decreased of 0.25 points.
+                            ex. "Gli impiegati sono pregati di spagnere la luce quando lasciano lo studio"
 
 
 - male_expressions():       This rule checks if a common expression only referred to male gender is used, taking as a reference a corpus built by us. 
                             If this happens, a score of 0.25 is taken from the inclusiveness score.
-                            ex. uomini di fede-> non inclusivo
+                            ex. "Beati gli uomini di fede"
 """
 
 
