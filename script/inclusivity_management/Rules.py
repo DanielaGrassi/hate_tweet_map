@@ -416,6 +416,9 @@ if __name__ == "__main__":
     explain = args.explain
     verbose = args.verbose
 
+    if verbose:
+        logging.basicConfig(filename="../../log.txt", level=logging.INFO)
+
     if userid is not None:
         with open("../../script/search_tweets/search_tweets.config", "r") as params_file:
             params = yaml.safe_load(params_file)
@@ -429,14 +432,10 @@ if __name__ == "__main__":
         tweets = pd.read_csv('../../input.csv')
         sentences, ph = save_postag(tweets)
         d = rules(sentences, ph, explain)
-        if verbose:
-            logging.basicConfig(filename="log.txt", level=logging.INFO)
 
     if path_csv is not None:
         tweets = pd.read_csv(path_csv)
         sentences, ph = save_postag(tweets)
         d = rules(sentences, ph, explain)
-        if verbose:
-            logging.basicConfig(filename="log.txt", level=logging.INFO)
 
     pd.DataFrame(d).  to_csv('../../results.csv', sep=',', encoding='utf-8-sig', index=False)
