@@ -21,41 +21,43 @@ also lexicons of proper nouns are used.
 
 - male_female_jobs():       This rule checks that both male and female plural jobs are used in the same phrase. 
                             If the pattern matches, a score of 0.25 is added to the whole inclusiveness.
+                            ex. "Si informano lavoratori e lavoratrici che il giorno 21 gennaio è indetto uno sciopero"
 
 - article_noun():           This rule checks that a surname is not used with an article. 
                             If the pattern article + surname is respected, a score of 0.25 is taken off.
-                            ex. La Boschi
+                            ex. "La Boschi"
 
 - femaleName_maleAppos():   This rule checks if a female proper noun is followed by a male apposition. 
                             If this happens, a score of 0.25 is taken off from the whole inclusivity.
-                            ex. Alessia è un avvocato formidabile
+                            ex. "Alessia è un avvocato formidabile"
 
 - art_donna_noun():         This rule checks if the noun "donna" is followed by a male noun. 
                             In this case, the score is decreased of 0.25.  
+                            ex. "La donna medico è riuscita nell'intervento"
 
 - maleAppos_femaleName():   This rule checks if a male apposition is followed by a female proper noun. 
                             If this happens, a score of 0.25 is taken off from the whole inclusivity.  
-                            ex. L'assessore Daniela        
+                            ex. "L'assessore Daniela ha presenziato la riunione"        
 
 - noun_donna():             This rule checks if a male apposition is followed by the noun "donna". 
                             If this happens, a score of 0.25 is taken off from the whole inclusivity.  
-                            ex. L'assesore donna
+                            ex. "L'assessore donna ha presenziato la riunione"
 
 - femaleSub_malePart():     This rule checks if a female proper noun is used with a male participle tens. 
                             If this happens, a score of 0.25 is taken from the inclusivity score.  
-                            ex. Daniela è andato
+                            ex. "Daniela è andato alla spiaggia"
 
 - pronoun_inclusive():      This rule checks if the gender pronouns are used together in the same phrase. 
                             If this happens, the inclusivity score is increased of 0.25.
-                            ex. lui/lei
+                            ex. "lui/lei"
 
 - article_inclusive():      This rule checks if the gender articles are used together in the same phrase. 
                             If this happens, the inclusivity score is increased of 0.25.
-                            ex. il/la - un/una
+                            ex. "il/la - un/una"
 
 - word_ends_with2gender():  This rule checks if a word is declinated in more forms, using two genders. 
                             If this happens, the inclusiveness score is increased of 0.10.
-                            ex. andati/e
+                            ex. "andati/e"
 
 
 - schwa():                  This rule checks if in a phrase there are words that end with the schwa or with an asterisk. 
