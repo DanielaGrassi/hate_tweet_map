@@ -438,23 +438,8 @@ class SearchTweets:
         self.log.debug("SAVING TWEETS")
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
-            list_tweet = []
             results = []
             for tweet in self.response.get('data', []):
-                list_tweet.append(tweet['text'])
-                for t in list_tweet:
-                    clean_tweet = re.sub("@[A-Za-z0-9_]+", "", t)
-                    clean_tweet = re.sub("#[A-Za-z0-9_]+", "", clean_tweet)
-                    clean_link = re.sub(r"http\S+", "", clean_tweet)
-                    regrex_pattern = re.compile(pattern="["
-                                                        u"\U0001F600-\U0001F64F"  # emoticons
-                                                        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-                                                        u"\U0001F680-\U0001F6FF"  # transport & map symbols
-                                                        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                                                        "]+", flags=re.UNICODE)
-                    result = regrex_pattern.sub(r'', clean_link)
-                    tweet['text'] = result.lower()
-
                 fut = executor.submit(util.pre_process_tweets_response, tweet, self.response['includes'])
                 fut.add_done_callback(self.__save_callback)
                 futures.append(fut)

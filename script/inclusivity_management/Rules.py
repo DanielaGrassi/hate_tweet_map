@@ -4,7 +4,7 @@ import pandas as pd
 import yaml
 import script.inclusivity_management.utils as utils
 from script.search_tweets import search_tweets
-
+import logging
 
 """
 Rules.py:
@@ -53,10 +53,9 @@ also lexicons of proper nouns are used.
 """
 
 
-
 def male_female_jobs(tweet, male_list, female_list):
     male_female_detected = False
-    male_female_words_detected=[]
+    male_female_words_detected = []
     for idx, (token, tag, det, morph) in enumerate(tweet):
         doc = nlp(token)
         for w in doc:
@@ -67,7 +66,7 @@ def male_female_jobs(tweet, male_list, female_list):
                         token_words, tag_words, det_words, morph_words = words
                         doc_token = nlp(token_words)
                         for d in doc_token:
-                            if tag_words =='NOUN' and d.lemma_ in female_list:
+                            if tag_words == 'NOUN' and d.lemma_ in female_list:
                                 pos1 = female_list.index(d.lemma_)
                                 if pos == pos1:
                                     if 'Number' in morph_words and morph_words['Number'] == 'Plur':
@@ -75,7 +74,7 @@ def male_female_jobs(tweet, male_list, female_list):
                                         male_female_words_detected.append(token)
                                         male_female_words_detected.append(token_words)
 
-    return male_female_detected,male_female_words_detected
+    return male_female_detected, male_female_words_detected
 
 
 def article_noun(tweet, explain):
@@ -306,7 +305,7 @@ def save_postag(df):
     return tweets, pos_tagging
 
 
-def main(sentences, ph, explain):
+def rules(sentences, ph, explain):
     d = []
     for sentence, phrase in zip(sentences, ph):
         scores = []
@@ -363,7 +362,6 @@ def main(sentences, ph, explain):
         inclusive = sum(scores)
         explanations = [x for x in explanations if x is not None]
 
-
         sentence = sentence.replace(",", "")
         sentence = sentence.replace("\"", "")
 
@@ -375,10 +373,16 @@ def main(sentences, ph, explain):
             }
         )
 
-    pd.DataFrame(d).to_csv('../../results.csv', sep=',', encoding='utf-8-sig', index=False)
+        logging.info(sentence)
+        logging.info(phrase)
+        logging.info(inclusive)
+        logging.info(explanations)
+
+    return d
 
 
 if __name__ == "__main__":
+
 
     nlp = spacy.load("it_core_news_lg")
     ## inclusivity for the whole dataset
@@ -396,8 +400,10 @@ if __name__ == "__main__":
                                                    "the indicated user")
     parser.add_argument('--path', type=str, help="This parameter should be a path to the csv with a list of tweet")
     parser.add_argument('--n_tweet', type=int, help="This parameter should be the number of the tweet to retrieve")
-    parser.add_argument('--explain', dest='explain', action='store_true', help="This parameter return the explaination of the score")
-    parser.add_argument('--no_explain', dest='explain', action='store_false', help="This parameter don't return the explaination of the score")
+    parser.add_argument('--explain', dest='explain', action='store_true',
+                        help="This parameter return the explaination of the score")
+    parser.add_argument('--no_explain', dest='explain', action='store_false',
+                        help="This parameter don't return the explaination of the score")
     parser.set_defaults(explain=True)
     parser.add_argument('--verbose', dest='verbose', action='store_true')
     parser.set_defaults(explain=True)
@@ -408,6 +414,7 @@ if __name__ == "__main__":
     path_csv = args.path
     n_tweet = args.n_tweet
     explain = args.explain
+    verbose = args.verbose
 
     if userid is not None:
         with open("../../script/search_tweets/search_tweets.config", "r") as params_file:
@@ -421,10 +428,15 @@ if __name__ == "__main__":
         search_tweets.main()
         tweets = pd.read_csv('../../input.csv')
         sentences, ph = save_postag(tweets)
-        main(sentences, ph, explain)
+        d = rules(sentences, ph, explain)
+        if verbose:
+            logging.basicConfig(filename="log.txt", level=logging.INFO)
 
     if path_csv is not None:
         tweets = pd.read_csv(path_csv)
         sentences, ph = save_postag(tweets)
-        d = []
-        main(sentences, ph, explain)
+        d = rules(sentences, ph, explain)
+        if verbose:
+            logging.basicConfig(filename="log.txt", level=logging.INFO)
+
+    pd.DataFrame(d).  to_csv('../../results.csv', sep=',', encoding='utf-8-sig', index=False)
