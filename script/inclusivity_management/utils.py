@@ -1,5 +1,5 @@
 import re
-
+import yaml
 import pandas as pd
 
 def read_tsv(tsv):
@@ -51,3 +51,23 @@ def clean_tweet (t):
     return result
 
 
+def calculate_user_score(results_csv):
+
+    tweets = pd.read_csv(results_csv)
+    df = pd.DataFrame(tweets)
+    inclusivity_sum = df['inclusive_rate'].sum()
+    n_tweets = df['inclusive_rate'].count()
+    inclusivity_score = inclusivity_sum/n_tweets
+    if inclusivity_score > 0.00:
+        user_label = "inclusive"
+    elif inclusivity_score == 0.00:
+        user_label = "neutral"
+    else:
+        user_label = "non-inclusive"
+
+    return inclusivity_score, user_label
+
+
+
+if __name__ == "__main__":
+   calculate_user_score('../../results.csv')
