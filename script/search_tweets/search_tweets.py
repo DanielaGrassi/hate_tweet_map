@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from hate_tweet_map.database import DataBase
 from hate_tweet_map.tweets_searcher.SearchTweets import SearchTweets
 
 import time
@@ -15,7 +14,6 @@ def main():
     start = time.time()
     log.info(datetime.fromtimestamp(start))
 
-    #mongo_db = DataBase("../../script/search_tweets/search_tweets.config")
     log.info("LOADING CONFIGURATION")
     twitter_search = SearchTweets(path_to_cnfg_file='../../script/search_tweets/search_tweets.config')
 

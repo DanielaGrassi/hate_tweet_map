@@ -39,7 +39,7 @@ class SearchTweets:
         self.log.setLevel(logging.INFO)
         logging.basicConfig()
         self.response = {}
-        # load the comfiguration file, save the parameters and validate it
+        # load the configuration file, save the parameters and validate it
         with open(path_to_cnfg_file, "r") as ymlfile:
             cfg = yaml.safe_load(ymlfile)
             check = []
@@ -417,13 +417,9 @@ class SearchTweets:
             else:
                 bar = tqdm(desc="INFO:SEARCH:SEARCHING", leave=False, position=0)
             self.__make(bar)
-        # time.sleep(0.1)
-        # if bar is not None:
-        #    bar.close()
+
         print('\n')
-        # self.log.info('CREATING NECESSARY INDEXES ON DB')
-        # self.log.debug(self.mongodb.create_indexes())
-        #
+
 
         return self.total_result
 
@@ -445,22 +441,10 @@ class SearchTweets:
                 futures.append(fut)
                 results.append(tweet['text'])
                 pd.DataFrame(results).to_csv('../../input.csv', sep=',', encoding='utf-8-sig', index=True, header=['Tweet'])
-                # if not self.mongodb.is_in(tweet['id']):
-                #     self.log.debug(tweet)
-                #     # process each tweet ib parallel
-                #     fut = executor.submit(util.pre_process_tweets_response, tweet, self.response['includes'])
-                #     fut.add_done_callback(self.__save_callback)
-                #     futures.append(fut)
-                # else:
-                #     # if the tweet is already in the db not save it and update the value of the number of tweets saved.
-                #     self.total_result -= 1
 
         for job in tqdm(as_completed(futures), total=len(futures), desc="INFO:SEARCH:SAVING", leave=False, position=1):
             pass
 
-        # self.mongodb.save_many(self._all)
-        # # clean the list populate with these tweets processed.
-        # self._all = []
 
     def __save_callback(self, fut: Future):
         # append the tweet process on a list

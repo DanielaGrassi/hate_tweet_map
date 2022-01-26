@@ -66,8 +66,3 @@ def calculate_user_score(results_csv):
         user_label = "non-inclusive"
 
     return inclusivity_score, user_label
-
-
-
-if __name__ == "__main__":
-   calculate_user_score('../../results.csv')

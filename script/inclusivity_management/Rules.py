@@ -298,7 +298,6 @@ def save_postag(df):
                 if len(j) != 0:
                     couple_list = j.split('=')
                     phrase_dict[couple_list[0]] = couple_list[1]
-            # mette i vari capturing group in phrase_pos
             phrase_pos.append((token.text, token.pos_, token.dep_, phrase_dict))
 
         pos_tagging.append(phrase_pos)
@@ -378,6 +377,7 @@ def rules(sentences, ph, explain):
         logging.info(inclusive)
         logging.info(explanations)
 
+    pd.DataFrame(d).to_csv('../../results.csv', sep=',', encoding='utf-8-sig', index=False)
     return d
 
 
@@ -385,7 +385,6 @@ if __name__ == "__main__":
 
 
     nlp = spacy.load("it_core_news_lg")
-    ## inclusivity for the whole dataset
     crafts_path = '../../script/inclusivity_management/docs/list.tsv'
     crafts = utils.read_tsv(crafts_path)
     male_list = list(crafts['itemLabel'])
@@ -429,7 +428,7 @@ if __name__ == "__main__":
             yaml.dump(params, params_file, default_flow_style=False)
 
         search_tweets.main()
-        tweets = pd.read_csv('../../tweets.csv')
+        tweets = pd.read_csv('../../input.csv')
         sentences, ph = save_postag(tweets)
         d = rules(sentences, ph, explain)
 
@@ -442,4 +441,4 @@ if __name__ == "__main__":
         sentences, ph = save_postag(tweets)
         d = rules(sentences, ph, explain)
 
-    pd.DataFrame(d).  to_csv('../../results.csv', sep=',', encoding='utf-8-sig', index=False)
+
